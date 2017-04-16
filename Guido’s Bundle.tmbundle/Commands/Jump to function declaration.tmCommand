@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env bash
+# http://superuser.com/a/460789
+
+# Get current/selected word
+FUNC="${TM_CURRENT_WORD:-$TM_SELECTED_TEXT}"
+if [ -z $FUNC ]; then exit 0; fi
+
+# Get information about current file
+DIR="$TM_PROJECT_DIRECTORY"
+FILENAME=$(basename "$TM_FILEPATH")
+EXTENSION=$([[ "$FILENAME" = *.* ]] &amp;&amp; echo "${FILENAME##*.}" || echo '')
+
+# Define the class or function definition string that we're looking for.
+FUNCDEF='(def|class|function)\s*'$FUNC'\W'
+
+# Find all files that contain FUNCDEF and that have the same
+# extension as the current one
+IFS=$'\t\n'
+if [ -n $EXTENSION ]; then
+  FILES=(`egrep "$FUNCDEF" "$DIR" -rsl --include="*.$EXTENSION"`)
+fi
+
+# If no files were found, or if the current file has no extension,
+# extend the search to all non-binary files
+if [ ${#FILES[@]} -eq 0 ] || [ -z $EXTENSION ]; then
+  FILES=(`egrep "$FUNCDEF" "$DIR" -rIsl`)
+fi
+unset $IFS
+
+# Look for a function declaration within a files contents
+function lookup_function {
+  # Array with the line numbers where the definition appears
+  local lines=(`nl -b a "$1" | egrep "$FUNCDEF" | awk '{print $1}'`)
+  # Only pick the first line in which the definition appears
+  for line in "${lines[@]}"; do
+    if [ "$line" -ge 0 ]; then
+      # Save current position to file
+      location_history="$TMPDIR/tm_location_history.txt"
+      echo "mate \"$TM_FILEPATH\" -l \"$TM_LINE_NUMBER:$TM_LINE_INDEX\"" &gt;&gt; "$location_history"
+      # cat $location_history
+      # echo 'Jumping to --&gt; '$1':'$line
+      mate "$1" -l "${line[0]}"
+      # Uncomment the following line to open all files
+      # in which the function is defined
+      exit 0
+    fi
+  done
+}
+
+# Iterate files
+for file in "${FILES[@]}"; do
+  echo $file
+  lookup_function "$file"
+done
+
+# Nothing found
+echo "Function '${FUNC}' was not found within the current project."</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>^@j</string>
+	<key>name</key>
+	<string>Jump to function declaration</string>
+	<key>outputCaret</key>
+	<string>heuristic</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
+	<key>uuid</key>
+	<string>2EB44515-DF44-4819-8A1B-FB8BCD29F3C8</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>

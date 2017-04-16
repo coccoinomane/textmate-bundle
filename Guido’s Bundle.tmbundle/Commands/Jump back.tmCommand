@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env bash
+
+# If there is a previous position registered, just jump there
+# This is used as a mechanism to return to the point where we
+# were when we first looked for a function declaration using the
+# "Jump to function declaration" command.
+location_history="$TMPDIR/tm_location_history.txt"
+if [ -s "$location_history" ]; then
+  last_location=$(tail -n 1 "$location_history")
+  eval $last_location
+  sed -i '' '$ d' "$location_history"
+  exit 0
+fi
+
+# Nothing found
+echo "No history, cannot go back."</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>^@J</string>
+	<key>name</key>
+	<string>Jump back</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>toolTip</string>
+	<key>uuid</key>
+	<string>06DDC0B7-6D9B-4267-B7EC-69A6F5F29766</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>
